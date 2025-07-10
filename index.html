@@ -1,0 +1,557 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2575.6">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="en"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;title&gt;Collaborative Project Planner&lt;/title&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script src="https://cdn.tailwindcss.com"&gt;&lt;/script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>body {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-family: 'Inter', sans-serif;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.gantt-chart-container {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>overflow-x: auto;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>-webkit-overflow-scrolling: touch;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.gantt-grid {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>display: grid;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>grid-template-columns: 200px 1fr;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>position: relative;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.gantt-task-bar {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>position: absolute;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>height: 32px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background-color: #3b82f6;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 0.375rem;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>cursor: move;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>display: flex;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>align-items: center;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>justify-content: center;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>color: white;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-size: 0.875rem;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 500;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>z-index: 10;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>transition: background-color 0.2s, left 0.2s, width 0.2s;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.gantt-task-bar.view-only {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>cursor: default;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.gantt-task-bar:not(.view-only):hover {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background-color: #2563eb;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.gantt-header-cell {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>min-width: 40px;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.modal {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>transition: opacity 0.25s ease;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.modal-active {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>opacity: 1;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>pointer-events: auto;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.modal-inactive {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>opacity: 0;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>pointer-events: none;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>#view-shared-container { display: none; }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body class="bg-gray-100 text-gray-800"&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="main-app" class="container mx-auto p-4 md:p-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;header class="mb-8 flex justify-between items-start"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;h1 class="text-3xl md:text-4xl font-bold text-gray-900"&gt;Collaborative Project Planner&lt;/h1&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;p class="text-gray-600 mt-2"&gt;Changes are saved and synced in real-time.&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;button id="shareButton" class="bg-green-500 text-white font-bold py-2 px-4 rounded-md hover:bg-green-600 flex items-center space-x-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/svg&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;span&gt;Share&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/header&gt;</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div id="editor-controls"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg mb-8" role="alert"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;p class="font-bold"&gt;Your Project ID:&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;p id="userIdDisplay" class="break-all"&gt;Loading...&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="text-center mb-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;button id="show-view-shared-btn" class="text-blue-600 hover:text-blue-800 hover:underline"&gt;Or, view a shared plan&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div id="view-shared-container" class="bg-white rounded-xl shadow-lg p-6 mb-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;h2 class="text-xl font-semibold mb-4"&gt;View a Shared Plan&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;p class="text-gray-600 mb-4"&gt;Enter the Project ID you received from a colleague to view their plan.&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;form id="viewSharedForm" class="flex items-center gap-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;input type="text" id="sharedProjectIdInput" class="flex-grow block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Paste Project ID here" required&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;button type="submit" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-700"&gt;Load Plan&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/form&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="bg-white rounded-xl shadow-lg p-6 mb-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;h2 class="text-xl font-semibold mb-4"&gt;Add New Task&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;form id="addTaskForm" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;label for="taskName" class="block text-sm font-medium text-gray-700"&gt;Task Name&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;input type="text" id="taskName" name="taskName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="e.g., Design Phase" required&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;label for="taskDuration" class="block text-sm font-medium text-gray-700"&gt;Duration (days)&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;input type="number" id="taskDuration" name="taskDuration" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="e.g., 5" min="1" required&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;label for="taskDependency" class="block text-sm font-medium text-gray-700"&gt;Dependency&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;select id="taskDependency" name="taskDependency" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;option value=""&gt;None&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/select&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;button type="submit" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 h-10"&gt;Add Task&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/form&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="bg-white rounded-xl shadow-lg"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="p-6 border-b border-gray-200 flex justify-between items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;h2 class="text-xl font-semibold"&gt;Project Timeline&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="text-right"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;p class="text-sm text-gray-500"&gt;Project End Date&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;p id="projectEndDate" class="text-lg font-bold text-blue-600"&gt;N/A&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div id="ganttChart" class="gantt-chart-container p-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="flex items-center justify-center h-48"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;p class="text-gray-500"&gt;Loading project plan...&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- Modals --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="editTaskModal" class="modal modal-inactive fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md mx-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;h2 class="text-2xl font-bold mb-4"&gt;Edit Task&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;form id="editTaskForm"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;input type="hidden" id="editTaskId"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="mb-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;label for="editTaskName" class="block text-sm font-medium text-gray-700"&gt;Task Name&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;input type="text" id="editTaskName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="mb-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;label for="editTaskDuration" class="block text-sm font-medium text-gray-700"&gt;Duration (days)&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;input type="number" id="editTaskDuration" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" min="1" required&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="flex justify-between"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;button type="button" id="deleteTaskButton" class="bg-red-600 text-white font-bold py-2 px-4 rounded-md hover:bg-red-700"&gt;Delete&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;button type="button" id="cancelEdit" class="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-md hover:bg-gray-300 mr-2"&gt;Cancel&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;button type="submit" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700"&gt;Save Changes&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/form&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="shareModal" class="modal modal-inactive fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-lg mx-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;h2 class="text-2xl font-bold mb-4"&gt;Share Your Project ID&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;p class="text-gray-600 mb-4"&gt;Copy and send this Project ID to a colleague. They can enter it on the main page to view your plan.&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="relative bg-gray-100 p-4 rounded-md"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;input type="text" id="shareProjectIdInput" readonly class="w-full bg-transparent text-gray-800 border-none focus:ring-0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;button id="copyIdButton" class="absolute top-1/2 right-3 -translate-y-1/2 bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600"&gt;Copy ID&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;p id="copyFeedback" class="text-green-600 text-sm mt-2 h-5"&gt;&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="text-right mt-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;button id="closeShareModal" class="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-md hover:bg-gray-300"&gt;Close&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script type="module"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>// --- Firebase SDK Imports ---</p>
+<p class="p1"><span class="Apple-converted-space">        </span>import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>import { getFirestore, collection, doc, addDoc, setDoc, deleteDoc, onSnapshot, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// --- Firebase Configuration and Initialization ---</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const appId = typeof __app_id !== 'undefined' ? __app_id : 'gantt-planner-default';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "DEMO", authDomain: "DEMO", projectId: "DEMO" };</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>const app = initializeApp(firebaseConfig);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const auth = getAuth(app);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const db = getFirestore(app);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.addEventListener('DOMContentLoaded', async () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>// --- STATE MANAGEMENT ---</p>
+<p class="p1"><span class="Apple-converted-space">            </span>let tasks = [];</p>
+<p class="p1"><span class="Apple-converted-space">            </span>let dayWidth = 40;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>let tasksCollectionRef;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>let unsubscribeFromTasks;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>let currentProjectId;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>let isViewOnly = false;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// --- DOM ELEMENTS ---</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const ganttChart = document.getElementById('ganttChart');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const addTaskForm = document.getElementById('addTaskForm');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const taskDependencySelect = document.getElementById('taskDependency');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const projectEndDateEl = document.getElementById('projectEndDate');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const editTaskModal = document.getElementById('editTaskModal');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const shareModal = document.getElementById('shareModal');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const shareButton = document.getElementById('shareButton');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const closeShareModalButton = document.getElementById('closeShareModal');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const copyIdButton = document.getElementById('copyIdButton');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const shareProjectIdInput = document.getElementById('shareProjectIdInput');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const copyFeedback = document.getElementById('copyFeedback');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const userIdDisplay = document.getElementById('userIdDisplay');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const mainAppContainer = document.getElementById('main-app');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const viewSharedContainer = document.getElementById('view-shared-container');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const showViewSharedBtn = document.getElementById('show-view-shared-btn');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const viewSharedForm = document.getElementById('viewSharedForm');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// --- URL Parsing for View-Only Mode ---</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const urlParams = new URLSearchParams(window.location.search);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const viewProjectId = urlParams.get('view');</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (viewProjectId) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>isViewOnly = true;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>currentProjectId = viewProjectId;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>document.title = `View Plan: ${viewProjectId.substring(0,8)}...`;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>document.getElementById('editor-controls').style.display = 'none';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>document.querySelector('header h1').textContent = 'Project Plan (View-Only)';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>document.querySelector('header p').textContent = `Currently viewing project: ${viewProjectId}`;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>document.getElementById('shareButton').style.display = 'none';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// --- FUNCTION DEFINITIONS ---</p>
+<p class="p1"><span class="Apple-converted-space">            </span>function listenForTaskUpdates() {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (unsubscribeFromTasks) unsubscribeFromTasks();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (!tasksCollectionRef) return;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>unsubscribeFromTasks = onSnapshot(query(tasksCollectionRef), (snapshot) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>tasks = snapshot.docs.map(doc =&gt; ({ id: doc.id, ...doc.data() }));</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>renderGanttChart();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>});</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>function setupFirestoreListener(projectId) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>tasksCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', projectId);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>listenForTaskUpdates();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// --- AUTHENTICATION &amp; DATA SETUP ---</p>
+<p class="p1"><span class="Apple-converted-space">            </span>onAuthStateChanged(auth, user =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (user) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>if (!isViewOnly) {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>currentProjectId = user.uid;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>userIdDisplay.textContent = currentProjectId;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>setupFirestoreListener(currentProjectId);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>setupFirestoreListener(viewProjectId);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>try {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (typeof __initial_auth_token !== 'undefined' &amp;&amp; __initial_auth_token) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>await signInWithCustomToken(auth, __initial_auth_token);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>await signInAnonymously(auth);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>} catch (error) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>console.error("Authentication failed:", error);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if(userIdDisplay) userIdDisplay.textContent = "Authentication failed.";</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// --- DATE HELPERS ---</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const addDays = (date, days) =&gt; { const r = new Date(date); r.setDate(r.getDate() + days); return r; };</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const getDaysDifference = (d1, d2) =&gt; Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const formatDate = (d) =&gt; d ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// --- CORE LOGIC ---</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const calculateEndDate = (task) =&gt; addDays(new Date(task.start.seconds * 1000), task.duration);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const recalculateProjectSchedule = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (isViewOnly) return;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const taskMap = new Map(tasks.map(t =&gt; [t.id, t]));</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const sortedTasks = [];</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const visited = new Set();</p>
+<p class="p2"><span class="Apple-converted-space">                </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>function visit(task) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>if (!task || visited.has(task.id)) return;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>visited.add(task.id);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>task.dependencies.forEach(depId =&gt; visit(taskMap.get(depId)));</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>sortedTasks.push(task);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>tasks.forEach(task =&gt; visit(task));</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>const updates = new Map();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>sortedTasks.forEach(task =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>let maxDepEndDate = null;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>task.dependencies.forEach(depId =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>const depTask = taskMap.get(depId);</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>if (depTask) {</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>const depEndDate = calculateEndDate(depTask);</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>if (!maxDepEndDate || depEndDate &gt; maxDepEndDate) maxDepEndDate = depEndDate;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>});</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const currentStart = new Date(task.start.seconds * 1000);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>if (maxDepEndDate &amp;&amp; maxDepEndDate &gt; currentStart) {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>task.start = { seconds: maxDepEndDate.getTime() / 1000 };<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>updates.set(task.id, { start: maxDepEndDate });</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>updates.forEach((value, key) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const taskDocRef = doc(db, tasksCollectionRef.path, key);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>setDoc(taskDocRef, value, { merge: true });</p>
+<p class="p1"><span class="Apple-converted-space">                </span>});</p>
+<p class="p1"><span class="Apple-converted-space">            </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const updateProjectEndDate = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const el = document.getElementById('projectEndDate');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (!el || tasks.length === 0) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>if(el) el.textContent = 'N/A';</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const projectEnd = new Date(Math.max(...tasks.map(t =&gt; calculateEndDate(t))));</p>
+<p class="p1"><span class="Apple-converted-space">                </span>el.textContent = formatDate(projectEnd);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// --- RENDERING ---</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const renderGanttChart = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const chartContainer = document.getElementById('ganttChart');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (!tasks || !chartContainer) return;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>tasks.sort((a,b) =&gt; a.start.seconds - b.start.seconds);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>chartContainer.innerHTML = '';<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (tasks.length === 0) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>chartContainer.innerHTML = `&lt;p class="text-gray-500"&gt;${isViewOnly ? 'This project has no tasks.' : 'No tasks yet. Add a task to begin.'}&lt;/p&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>updateProjectEndDate();</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>if(!isViewOnly) updateDependencyOptions();</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>recalculateProjectSchedule();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>const projectStart = new Date(Math.min(...tasks.map(t =&gt; t.start.seconds)) * 1000);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const projectEnd = new Date(Math.max(...tasks.map(t =&gt; calculateEndDate(t))));</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const totalDays = getDaysDifference(projectStart, projectEnd) + 5;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>const ganttGrid = document.createElement('div');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>ganttGrid.className = 'gantt-grid';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>ganttGrid.style.width = `${200 + totalDays * dayWidth}px`;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>const taskList = document.createElement('div');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>taskList.className = 'border-r border-gray-200';</p>
+<p class="p2"><span class="Apple-converted-space">                </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>const taskListHeader = document.createElement('div');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>taskListHeader.className = 'h-12 flex items-center px-4 font-semibold border-b border-gray-200 bg-gray-50 sticky top-0 z-20';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>taskListHeader.textContent = 'Tasks';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>taskList.appendChild(taskListHeader);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>tasks.forEach(task =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const taskLabel = document.createElement('div');</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>taskLabel.className = 'h-10 flex items-center px-4 border-b border-gray-200 text-sm truncate';</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>taskLabel.textContent = task.name;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>taskLabel.title = task.name;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>taskList.appendChild(taskLabel);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>});</p>
+<p class="p1"><span class="Apple-converted-space">                </span>ganttGrid.appendChild(taskList);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>const timeline = document.createElement('div');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const header = document.createElement('div');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>header.className = 'flex border-b border-gray-200 bg-gray-50 sticky top-0 z-20';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>for (let i = 0; i &lt; totalDays; i++) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const day = addDays(projectStart, i);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const headerCell = document.createElement('div');</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>headerCell.className = 'gantt-header-cell h-12 flex-shrink-0 border-r border-gray-200 flex flex-col items-center justify-center';</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>headerCell.style.width = `${dayWidth}px`;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>headerCell.innerHTML = `&lt;span class="text-xs"&gt;${day.toLocaleDateString('en-US', { weekday: 'short' })}&lt;/span&gt;&lt;span class="font-bold"&gt;${day.getDate()}&lt;/span&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>header.appendChild(headerCell);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>timeline.appendChild(header);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>const dateGrid = document.createElement('div');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>dateGrid.className = 'relative';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>dateGrid.style.height = `${tasks.length * 40}px`;</p>
+<p class="p2"><span class="Apple-converted-space">                </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>for (let i = 0; i &lt;= totalDays; i++) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const line = document.createElement('div');</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>line.className = 'absolute top-0 bottom-0 border-r border-gray-200';</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>line.style.left = `${i * dayWidth}px`;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>dateGrid.appendChild(line);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>tasks.forEach((_, index) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const line = document.createElement('div');</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>line.className = 'absolute left-0 right-0 border-b border-gray-200';</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>line.style.top = `${(index + 1) * 40}px`;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>dateGrid.appendChild(line);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>tasks.forEach((task, index) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const taskStart = new Date(task.start.seconds * 1000);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const daysFromStart = getDaysDifference(projectStart, taskStart);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const bar = document.createElement('div');</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>bar.className = 'gantt-task-bar';</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>if(isViewOnly) bar.classList.add('view-only');</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>bar.textContent = task.name;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>bar.style.top = `${index * 40 + 4}px`;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>bar.style.left = `${daysFromStart * dayWidth}px`;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>bar.style.width = `${task.duration * dayWidth}px`;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>bar.dataset.taskId = task.id;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>if (!isViewOnly) {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>bar.addEventListener('dblclick', () =&gt; openEditModal(task.id));</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>makeDraggable(bar, projectStart);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>dateGrid.appendChild(bar);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>timeline.appendChild(dateGrid);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>ganttGrid.appendChild(timeline);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>chartContainer.appendChild(ganttGrid);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>updateProjectEndDate();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if(!isViewOnly) updateDependencyOptions();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const updateDependencyOptions = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (!taskDependencySelect) return;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const currentSelection = taskDependencySelect.value;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>taskDependencySelect.innerHTML = '&lt;option value=""&gt;None&lt;/option&gt;';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>tasks.forEach(task =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const option = document.createElement('option');</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>option.value = task.id;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>option.textContent = task.name;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>taskDependencySelect.appendChild(option);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>});</p>
+<p class="p1"><span class="Apple-converted-space">                </span>taskDependencySelect.value = currentSelection;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// --- FIRESTORE &amp; EVENT HANDLERS (for editor mode only) ---</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (!isViewOnly) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>showViewSharedBtn.addEventListener('click', () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>viewSharedContainer.style.display = viewSharedContainer.style.display === 'none' ? 'block' : 'none';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>viewSharedForm.addEventListener('submit', (e) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>e.preventDefault();</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const projectIdToView = document.getElementById('sharedProjectIdInput').value.trim();</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>if (projectIdToView) {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>window.location.search = `?view=${projectIdToView}`;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>addTaskForm.addEventListener('submit', async (e) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>e.preventDefault();</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const name = e.target.taskName.value;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const duration = parseInt(e.target.taskDuration.value, 10);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const dependencyId = e.target.taskDependency.value;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const dependencies = dependencyId ? [dependencyId] : [];</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>let startDate = new Date();</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>if (dependencies.length &gt; 0) {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>const depTask = tasks.find(t =&gt; t.id === dependencies[0]);</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>if (depTask) startDate = calculateEndDate(depTask);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>} else if (tasks.length &gt; 0) {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>const lastTaskEnd = new Date(Math.max(...tasks.map(t =&gt; calculateEndDate(t))));</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>startDate = addDays(lastTaskEnd, 1);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>await addDoc(tasksCollectionRef, { name, duration, dependencies, start: startDate, createdAt: serverTimestamp() });</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>addTaskForm.reset();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>});</p>
+<p class="p2"><span class="Apple-converted-space">                </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>const makeDraggable = (element, projectStart) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>let isDragging = false, initialX, initialLeft;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>element.addEventListener('mousedown', (e) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>if (e.button !== 0) return;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>isDragging = true; initialX = e.clientX; initialLeft = element.offsetLeft;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>element.style.cursor = 'grabbing'; element.style.zIndex = '20'; document.body.style.userSelect = 'none';</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>});</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>document.addEventListener('mousemove', (e) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>if (!isDragging) return;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>element.style.left = `${initialLeft + e.clientX - initialX}px`;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>});</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>document.addEventListener('mouseup', async (e) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>if (!isDragging) return;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>isDragging = false; element.style.cursor = 'move'; element.style.zIndex = '10'; document.body.style.userSelect = 'auto';</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>const movedDays = Math.round((element.offsetLeft - initialLeft) / dayWidth);</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>const taskId = element.dataset.taskId;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>const task = tasks.find(t =&gt; t.id === taskId);</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>if (task) {</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>const newStart = addDays(new Date(task.start.seconds * 1000), movedDays);</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>await setDoc(doc(db, tasksCollectionRef.path, taskId), { start: newStart }, { merge: true });</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>});</p>
+<p class="p1"><span class="Apple-converted-space">                </span>};</p>
+<p class="p2"><span class="Apple-converted-space">                </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>const openEditModal = (taskId) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const task = tasks.find(t =&gt; t.id === taskId);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>if (!task) return;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>document.getElementById('editTaskId').value = task.id;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>document.getElementById('editTaskName').value = task.name;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>document.getElementById('editTaskDuration').value = task.duration;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>editTaskModal.classList.replace('modal-inactive', 'modal-active');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>};</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const closeEditModal = () =&gt; editTaskModal.classList.replace('modal-active', 'modal-inactive');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>editTaskForm.addEventListener('submit', async (e) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>e.preventDefault();</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const taskId = document.getElementById('editTaskId').value;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>await setDoc(doc(db, tasksCollectionRef.path, taskId), {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>name: document.getElementById('editTaskName').value,</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>duration: parseInt(document.getElementById('editTaskDuration').value, 10)</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>}, { merge: true });</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>closeEditModal();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>document.getElementById('cancelEdit').addEventListener('click', closeEditModal);</p>
+<p class="p2"><span class="Apple-converted-space">                </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>deleteTaskButton.addEventListener('click', async () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const taskId = document.getElementById('editTaskId').value;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>await deleteDoc(doc(db, tasksCollectionRef.path, taskId));</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const updates = [];</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>tasks.forEach(t =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>if (t.dependencies.includes(taskId)) {</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>updates.push(setDoc(doc(db, tasksCollectionRef.path, t.id), { dependencies: t.dependencies.filter(d =&gt; d !== taskId) }, { merge: true }));</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>});</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>await Promise.all(updates);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>closeEditModal();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>// Share Modal Logic</p>
+<p class="p1"><span class="Apple-converted-space">                </span>shareButton.addEventListener('click', () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>shareProjectIdInput.value = currentProjectId;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>shareModal.classList.replace('modal-inactive', 'modal-active');</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>copyFeedback.textContent = '';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>});</p>
+<p class="p1"><span class="Apple-converted-space">                </span>closeShareModalButton.addEventListener('click', () =&gt; shareModal.classList.replace('modal-active', 'modal-inactive'));</p>
+<p class="p1"><span class="Apple-converted-space">                </span>copyIdButton.addEventListener('click', () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>shareProjectIdInput.select();</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>document.execCommand('copy');</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>copyFeedback.textContent = 'Copied to clipboard!';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>});</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>});</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/script&gt;</p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+</body>
+</html>
