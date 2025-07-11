@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collaborative Project Planner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .gantt-chart-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .gantt-grid {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            position: relative;
+        }
+        .gantt-task-bar {
+            position: absolute;
+            height: 32px;
+            background-color: #3b82f6;
+            border-radius: 0.375rem;
+            cursor: move;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.875rem;
+            font-weight: 500;
+            z-index: 10;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: background-color 0.2s, left 0.2s, width 0.2s;
+        }
+        .gantt-task-bar.view-only {
+            cursor: default;
+        }
+        .gantt-task-bar:not(.view-only):hover {
+            background-color: #2563eb;
+        }
+        .gantt-header-cell {
+            min-width: 40px;
+        }
+        .modal {
+            transition: opacity 0.25s ease;
+        }
+        .modal-active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-inactive {
+            opacity: 0;
+            pointer-events: none;
+        }
+        #view-shared-container { display: none; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div id="main-app" class="container mx-auto p-4 md:p-8">
+        <header class="mb-8 flex justify-between items-start">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Collaborative Project Planner</h1>
+                <p class="text-gray-600 mt-2">Changes are saved and synced in real-time.</p>
+            </div>
+            <button id="shareButton" class="bg-green-500 text-white font-bold py-2 px-4 rounded-md hover:bg-green-600 flex items-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+                </svg>
+                <span>Share</span>
+            </button>
+        </header>
+        
+        <div id="editor-controls">
+            <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg mb-8" role="alert">
+              <p class="font-bold">Your Project ID:</p>
+              <p id="userIdDisplay" class="break-all">Loading...</p>
+            </div>
+
+            <div class="text-center mb-8">
+                <button id="show-view-shared-btn" class="text-blue-600 hover:text-blue-800 hover:underline">Or, view a shared plan</button>
+            </div>
+
+            <div id="view-shared-container" class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                <h2 class="text-xl font-semibold mb-4">View a Shared Plan</h2>
+                <p class="text-gray-600 mb-4">Enter the Project ID you received from a colleague to view their plan.</p>
+                <form id="viewSharedForm" class="flex items-center gap-4">
+                    <input type="text" id="sharedProjectIdInput" class="flex-grow block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Paste Project ID here" required>
+                    <button type="submit" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-700">Load Plan</button>
+                </form>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                <h2 class="text-xl font-semibold mb-4">Add New Task</h2>
+                <form id="addTaskForm" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <div>
+                        <label for="taskName" class="block text-sm font-medium text-gray-700">Task Name</label>
+                        <input type="text" id="taskName" name="taskName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="e.g., Design Phase" required>
+                    </div>
+                    <div>
+                        <label for="taskDuration" class="block text-sm font-medium text-gray-700">Duration (days)</label>
+                        <input type="number" id="taskDuration" name="taskDuration" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="e.g., 5" min="1" required>
+                    </div>
+                    <div>
+                        <label for="taskDependency" class="block text-sm font-medium text-gray-700">Dependency</label>
+                        <select id="taskDependency" name="taskDependency" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            <option value="">None</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 h-10">Add Task</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg">
+            <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+                <h2 class="text-xl font-semibold">Project Timeline</h2>
+                <div class="text-right">
+                    <p class="text-sm text-gray-500">Project End Date</p>
+                    <p id="projectEndDate" class="text-lg font-bold text-blue-600">N/A</p>
+                </div>
+            </div>
+            <div id="ganttChart" class="gantt-chart-container p-6">
+                <div class="flex items-center justify-center h-48">
+                    <p class="text-gray-500">Loading project plan...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="editTaskModal" class="modal modal-inactive fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md mx-4">
+            <h2 class="text-2xl font-bold mb-4">Edit Task</h2>
+            <form id="editTaskForm">
+                <input type="hidden" id="editTaskId">
+                <div class="mb-4">
+                    <label for="editTaskName" class="block text-sm font-medium text-gray-700">Task Name</label>
+                    <input type="text" id="editTaskName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                </div>
+                <div class="mb-4">
+                    <label for="editTaskDuration" class="block text-sm font-medium text-gray-700">Duration (days)</label>
+                    <input type="number" id="editTaskDuration" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" min="1" required>
+                </div>
+                <div class="flex justify-between">
+                    <button type="button" id="deleteTaskButton" class="bg-red-600 text-white font-bold py-2 px-4 rounded-md hover:bg-red-700">Delete</button>
+                    <div>
+                        <button type="button" id="cancelEdit" class="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-md hover:bg-gray-300 mr-2">Cancel</button>
+                        <button type="submit" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700">Save Changes</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="shareModal" class="modal modal-inactive fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-lg mx-4">
+            <h2 class="text-2xl font-bold mb-4">Share Your Project ID</h2>
+            <p class="text-gray-600 mb-4">Copy and send this Project ID to a colleague. They can enter it on the main page to view your plan.</p>
+            <div class="relative bg-gray-100 p-4 rounded-md">
+                <input type="text" id="shareProjectIdInput" readonly class="w-full bg-transparent text-gray-800 border-none focus:ring-0">
+                <button id="copyIdButton" class="absolute top-1/2 right-3 -translate-y-1/2 bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600">Copy ID</button>
+            </div>
+            <p id="copyFeedback" class="text-green-600 text-sm mt-2 h-5"></p>
+            <div class="text-right mt-4">
+                <button id="closeShareModal" class="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-md hover:bg-gray-300">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // --- Firebase SDK Imports ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, addDoc, setDoc, deleteDoc, onSnapshot, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Firebase Configuration and Initialization ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'gantt-planner-default';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "DEMO", authDomain: "DEMO", projectId: "DEMO" };
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // --- STATE MANAGEMENT ---
+            let tasks = [];
+            let dayWidth = 40;
+            let tasksCollectionRef;
+            let unsubscribeFromTasks;
+            let currentProjectId;
+            let isViewOnly = false;
+
+            // --- DOM ELEMENTS ---
+            const ganttChart = document.getElementById('ganttChart');
+            const addTaskForm = document.getElementById('addTaskForm');
+            const taskDependencySelect = document.getElementById('taskDependency');
+            const projectEndDateEl = document.getElementById('projectEndDate');
+            const editTaskModal = document.getElementById('editTaskModal');
+            const shareModal = document.getElementById('shareModal');
+            const shareButton = document.getElementById('shareButton');
+            const closeShareModalButton = document.getElementById('closeShareModal');
+            const copyIdButton = document.getElementById('copyIdButton');
+            const shareProjectIdInput = document.getElementById('shareProjectIdInput');
+            const copyFeedback = document.getElementById('copyFeedback');
+            const userIdDisplay = document.getElementById('userIdDisplay');
+            const mainAppContainer = document.getElementById('main-app');
+            const viewSharedContainer = document.getElementById('view-shared-container');
+            const showViewSharedBtn = document.getElementById('show-view-shared-btn');
+            const viewSharedForm = document.getElementById('viewSharedForm');
+
+            // --- URL Parsing for View-Only Mode ---
+            const urlParams = new URLSearchParams(window.location.search);
+            const viewProjectId = urlParams.get('view');
+            
+            if (viewProjectId) {
+                isViewOnly = true;
+                currentProjectId = viewProjectId;
+                document.title = `View Plan: ${viewProjectId.substring(0,8)}...`;
+                document.getElementById('editor-controls').style.display = 'none';
+                document.querySelector('header h1').textContent = 'Project Plan (View-Only)';
+                document.querySelector('header p').textContent = `Currently viewing project: ${viewProjectId}`;
+                document.getElementById('shareButton').style.display = 'none';
+            }
+
+            // --- FUNCTION DEFINITIONS ---
+            function listenForTaskUpdates() {
+                if (unsubscribeFromTasks) unsubscribeFromTasks();
+                if (!tasksCollectionRef) return;
+                unsubscribeFromTasks = onSnapshot(query(tasksCollectionRef), (snapshot) => {
+                    tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    renderGanttChart();
+                });
+            }
+            
+            function setupFirestoreListener(projectId) {
+                tasksCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', projectId);
+                listenForTaskUpdates();
+            }
+
+            // --- AUTHENTICATION & DATA SETUP ---
+            onAuthStateChanged(auth, user => {
+                if (user) {
+                    if (!isViewOnly) {
+                        currentProjectId = user.uid;
+                        userIdDisplay.textContent = currentProjectId;
+                        setupFirestoreListener(currentProjectId);
+                    } else {
+                        setupFirestoreListener(viewProjectId);
+                    }
+                }
+            });
+            
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Authentication failed:", error);
+                if(userIdDisplay) userIdDisplay.textContent = "Authentication failed.";
+            }
+
+            // --- DATE HELPERS ---
+            const addDays = (date, days) => { const r = new Date(date); r.setDate(r.getDate() + days); return r; };
+            const getDaysDifference = (d1, d2) => Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
+            const formatDate = (d) => d ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
+
+            // --- CORE LOGIC ---
+            const calculateEndDate = (task) => addDays(new Date(task.start.seconds * 1000), task.duration);
+
+            const recalculateProjectSchedule = () => {
+                if (isViewOnly) return;
+                const taskMap = new Map(tasks.map(t => [t.id, t]));
+                const sortedTasks = [];
+                const visited = new Set();
+                
+                function visit(task) {
+                    if (!task || visited.has(task.id)) return;
+                    visited.add(task.id);
+                    task.dependencies.forEach(depId => visit(taskMap.get(depId)));
+                    sortedTasks.push(task);
+                }
+                tasks.forEach(task => visit(task));
+
+                const updates = new Map();
+                sortedTasks.forEach(task => {
+                    let maxDepEndDate = null;
+                    task.dependencies.forEach(depId => {
+                        const depTask = taskMap.get(depId);
+                        if (depTask) {
+                            const depEndDate = calculateEndDate(depTask);
+                            if (!maxDepEndDate || depEndDate > maxDepEndDate) maxDepEndDate = depEndDate;
+                        }
+                    });
+                    const currentStart = new Date(task.start.seconds * 1000);
+                    if (maxDepEndDate && maxDepEndDate > currentStart) {
+                        task.start = { seconds: maxDepEndDate.getTime() / 1000 }; 
+                        updates.set(task.id, { start: maxDepEndDate });
+                    }
+                });
+
+                updates.forEach((value, key) => {
+                    const taskDocRef = doc(db, tasksCollectionRef.path, key);
+                    setDoc(taskDocRef, value, { merge: true });
+                });
+            };
+
+            const updateProjectEndDate = () => {
+                const el = document.getElementById('projectEndDate');
+                if (!el || tasks.length === 0) {
+                    if(el) el.textContent = 'N/A';
+                    return;
+                }
+                const projectEnd = new Date(Math.max(...tasks.map(t => calculateEndDate(t))));
+                el.textContent = formatDate(projectEnd);
+            };
+
+            // --- RENDERING ---
+            const renderGanttChart = () => {
+                const chartContainer = document.getElementById('ganttChart');
+                if (!tasks || !chartContainer) return;
+                tasks.sort((a,b) => a.start.seconds - b.start.seconds);
+
+                chartContainer.innerHTML = ''; 
+                if (tasks.length === 0) {
+                    chartContainer.innerHTML = `<p class="text-gray-500">${isViewOnly ? 'This project has no tasks.' : 'No tasks yet. Add a task to begin.'}</p>`;
+                    updateProjectEndDate();
+                    if(!isViewOnly) updateDependencyOptions();
+                    return;
+                }
+
+                recalculateProjectSchedule();
+
+                const projectStart = new Date(Math.min(...tasks.map(t => t.start.seconds)) * 1000);
+                const projectEnd = new Date(Math.max(...tasks.map(t => calculateEndDate(t))));
+                const totalDays = getDaysDifference(projectStart, projectEnd) + 5;
+
+                const ganttGrid = document.createElement('div');
+                ganttGrid.className = 'gantt-grid';
+                ganttGrid.style.width = `${200 + totalDays * dayWidth}px`;
+
+                const taskList = document.createElement('div');
+                taskList.className = 'border-r border-gray-200';
+                
+                const taskListHeader = document.createElement('div');
+                taskListHeader.className = 'h-12 flex items-center px-4 font-semibold border-b border-gray-200 bg-gray-50 sticky top-0 z-20';
+                taskListHeader.textContent = 'Tasks';
+                taskList.appendChild(taskListHeader);
+
+                tasks.forEach(task => {
+                    const taskLabel = document.createElement('div');
+                    taskLabel.className = 'h-10 flex items-center px-4 border-b border-gray-200 text-sm truncate';
+                    taskLabel.textContent = task.name;
+                    taskLabel.title = task.name;
+                    taskList.appendChild(taskLabel);
+                });
+                ganttGrid.appendChild(taskList);
+
+                const timeline = document.createElement('div');
+                const header = document.createElement('div');
+                header.className = 'flex border-b border-gray-200 bg-gray-50 sticky top-0 z-20';
+                for (let i = 0; i < totalDays; i++) {
+                    const day = addDays(projectStart, i);
+                    const headerCell = document.createElement('div');
+                    headerCell.className = 'gantt-header-cell h-12 flex-shrink-0 border-r border-gray-200 flex flex-col items-center justify-center';
+                    headerCell.style.width = `${dayWidth}px`;
+                    headerCell.innerHTML = `<span class="text-xs">${day.toLocaleDateString('en-US', { weekday: 'short' })}</span><span class="font-bold">${day.getDate()}</span>`;
+                    header.appendChild(headerCell);
+                }
+                timeline.appendChild(header);
+
+                const dateGrid = document.createElement('div');
+                dateGrid.className = 'relative';
+                dateGrid.style.height = `${tasks.length * 40}px`;
+                
+                for (let i = 0; i <= totalDays; i++) {
+                    const line = document.createElement('div');
+                    line.className = 'absolute top-0 bottom-0 border-r border-gray-200';
+                    line.style.left = `${i * dayWidth}px`;
+                    dateGrid.appendChild(line);
+                }
+                tasks.forEach((_, index) => {
+                    const line = document.createElement('div');
+                    line.className = 'absolute left-0 right-0 border-b border-gray-200';
+                    line.style.top = `${(index + 1) * 40}px`;
+                    dateGrid.appendChild(line);
+                });
+
+                tasks.forEach((task, index) => {
+                    const taskStart = new Date(task.start.seconds * 1000);
+                    const daysFromStart = getDaysDifference(projectStart, taskStart);
+                    const bar = document.createElement('div');
+                    bar.className = 'gantt-task-bar';
+                    if(isViewOnly) bar.classList.add('view-only');
+                    bar.textContent = task.name;
+                    bar.style.top = `${index * 40 + 4}px`;
+                    bar.style.left = `${daysFromStart * dayWidth}px`;
+                    bar.style.width = `${task.duration * dayWidth}px`;
+                    bar.dataset.taskId = task.id;
+
+                    if (!isViewOnly) {
+                        bar.addEventListener('dblclick', () => openEditModal(task.id));
+                        makeDraggable(bar, projectStart);
+                    }
+                    dateGrid.appendChild(bar);
+                });
+
+                timeline.appendChild(dateGrid);
+                ganttGrid.appendChild(timeline);
+                chartContainer.appendChild(ganttGrid);
+
+                updateProjectEndDate();
+                if(!isViewOnly) updateDependencyOptions();
+            };
+
+            const updateDependencyOptions = () => {
+                if (!taskDependencySelect) return;
+                const currentSelection = taskDependencySelect.value;
+                taskDependencySelect.innerHTML = '<option value="">None</option>';
+                tasks.forEach(task => {
+                    const option = document.createElement('option');
+                    option.value = task.id;
+                    option.textContent = task.name;
+                    taskDependencySelect.appendChild(option);
+                });
+                taskDependencySelect.value = currentSelection;
+            };
+
+            // --- FIRESTORE & EVENT HANDLERS (for editor mode only) ---
+            if (!isViewOnly) {
+                showViewSharedBtn.addEventListener('click', () => {
+                    viewSharedContainer.style.display = viewSharedContainer.style.display === 'none' ? 'block' : 'none';
+                });
+
+                viewSharedForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const projectIdToView = document.getElementById('sharedProjectIdInput').value.trim();
+                    if (projectIdToView) {
+                        window.location.search = `?view=${projectIdToView}`;
+                    }
+                });
+
+                addTaskForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const name = e.target.taskName.value;
+                    const duration = parseInt(e.target.taskDuration.value, 10);
+                    const dependencyId = e.target.taskDependency.value;
+                    const dependencies = dependencyId ? [dependencyId] : [];
+                    let startDate = new Date();
+                    if (dependencies.length > 0) {
+                        const depTask = tasks.find(t => t.id === dependencies[0]);
+                        if (depTask) startDate = calculateEndDate(depTask);
+                    } else if (tasks.length > 0) {
+                        const lastTaskEnd = new Date(Math.max(...tasks.map(t => calculateEndDate(t))));
+                        startDate = addDays(lastTaskEnd, 1);
+                    }
+                    await addDoc(tasksCollectionRef, { name, duration, dependencies, start: startDate, createdAt: serverTimestamp() });
+                    addTaskForm.reset();
+                });
+                
+                const makeDraggable = (element, projectStart) => {
+                    let isDragging = false, initialX, initialLeft;
+                    element.addEventListener('mousedown', (e) => {
+                        if (e.button !== 0) return;
+                        isDragging = true; initialX = e.clientX; initialLeft = element.offsetLeft;
+                        element.style.cursor = 'grabbing'; element.style.zIndex = '20'; document.body.style.userSelect = 'none';
+                    });
+                    document.addEventListener('mousemove', (e) => {
+                        if (!isDragging) return;
+                        element.style.left = `${initialLeft + e.clientX - initialX}px`;
+                    });
+                    document.addEventListener('mouseup', async (e) => {
+                        if (!isDragging) return;
+                        isDragging = false; element.style.cursor = 'move'; element.style.zIndex = '10'; document.body.style.userSelect = 'auto';
+                        const movedDays = Math.round((element.offsetLeft - initialLeft) / dayWidth);
+                        const taskId = element.dataset.taskId;
+                        const task = tasks.find(t => t.id === taskId);
+                        if (task) {
+                            const newStart = addDays(new Date(task.start.seconds * 1000), movedDays);
+                            await setDoc(doc(db, tasksCollectionRef.path, taskId), { start: newStart }, { merge: true });
+                        }
+                    });
+                };
+                
+                const openEditModal = (taskId) => {
+                    const task = tasks.find(t => t.id === taskId);
+                    if (!task) return;
+                    document.getElementById('editTaskId').value = task.id;
+                    document.getElementById('editTaskName').value = task.name;
+                    document.getElementById('editTaskDuration').value = task.duration;
+                    editTaskModal.classList.replace('modal-inactive', 'modal-active');
+                };
+                const closeEditModal = () => editTaskModal.classList.replace('modal-active', 'modal-inactive');
+
+                editTaskForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const taskId = document.getElementById('editTaskId').value;
+                    await setDoc(doc(db, tasksCollectionRef.path, taskId), {
+                        name: document.getElementById('editTaskName').value,
+                        duration: parseInt(document.getElementById('editTaskDuration').value, 10)
+                    }, { merge: true });
+                    closeEditModal();
+                });
+
+                document.getElementById('cancelEdit').addEventListener('click', closeEditModal);
+                
+                deleteTaskButton.addEventListener('click', async () => {
+                    const taskId = document.getElementById('editTaskId').value;
+                    await deleteDoc(doc(db, tasksCollectionRef.path, taskId));
+                    const updates = [];
+                    tasks.forEach(t => {
+                        if (t.dependencies.includes(taskId)) {
+                            updates.push(setDoc(doc(db, tasksCollectionRef.path, t.id), { dependencies: t.dependencies.filter(d => d !== taskId) }, { merge: true }));
+                        }
+                    });
+                    await Promise.all(updates);
+                    closeEditModal();
+                });
+
+                // Share Modal Logic
+                shareButton.addEventListener('click', () => {
+                    shareProjectIdInput.value = currentProjectId;
+                    shareModal.classList.replace('modal-inactive', 'modal-active');
+                    copyFeedback.textContent = '';
+                });
+                closeShareModalButton.addEventListener('click', () => shareModal.classList.replace('modal-active', 'modal-inactive'));
+                copyIdButton.addEventListener('click', () => {
+                    shareProjectIdInput.select();
+                    document.execCommand('copy');
+                    copyFeedback.textContent = 'Copied to clipboard!';
+                });
+            }
+        });
+    </script>
+</body>
+</html>
